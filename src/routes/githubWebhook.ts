@@ -22,10 +22,14 @@ export function registerWebhookRoute(app: FastifyInstance, config: EnvConfig): v
     const signature = request.headers['x-hub-signature-256'] as string | undefined;
     const event = request.headers['x-github-event'] as string | undefined;
 
-    // Validate signature
-    if (!verifyGitHubSignature(rawBody, signature, config.githubWebhookSecret)) {
-      logger.warn('Invalid webhook signature');
-      return reply.status(401).send({ error: 'Invalid signature' });
+    // Validate signature (skip if secret is not configured)
+    if (config.githubWebhookSecret) {
+      if (!verifyGitHubSignature(rawBody, signature, config.githubWebhookSecret)) {
+        logger.warn('Invalid webhook signature');
+        return reply.status(401).send({ error: 'Invalid signature' });
+      }
+    } else {
+      logger.warn('Webhook signature validation skipped (GITHUB_WEBHOOK_SECRET not set)');
     }
 
     if (!event) {

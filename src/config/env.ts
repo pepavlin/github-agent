@@ -21,7 +21,7 @@ export function loadConfig(): EnvConfig {
     implementerBaseUrl: requireEnv('IMPLEMENTER_BASE_URL').replace(/\/+$/, ''),
     implementerProjectApiKey: requireEnv('IMPLEMENTER_PROJECT_API_KEY'),
     githubAgentUsername: requireEnv('GITHUB_AGENT_USERNAME'),
-    githubWebhookSecret: requireEnv('GITHUB_WEBHOOK_SECRET'),
+    githubWebhookSecret: process.env['GITHUB_WEBHOOK_SECRET'] || '',
     githubToken: requireEnv('GITHUB_TOKEN'),
   };
 }

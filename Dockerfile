@@ -22,6 +22,4 @@ RUN mkdir -p /app/data
 
 ENV NODE_ENV=production
 
-EXPOSE 3800
-
 CMD ["node", "dist/index.js"]
