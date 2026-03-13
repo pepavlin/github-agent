@@ -23,6 +23,14 @@ describe('mentionsBot', () => {
   it('returns false for partial match', () => {
     expect(mentionsBot('@pavlin fix', botName)).toBe(false);
   });
+
+  it('returns false for extended username', () => {
+    expect(mentionsBot('@pavlin-dev-agentx fix', botName)).toBe(false);
+  });
+
+  it('detects mention at end of text', () => {
+    expect(mentionsBot('hey @pavlin-dev-agent', botName)).toBe(true);
+  });
 });
 
 describe('stripMention', () => {

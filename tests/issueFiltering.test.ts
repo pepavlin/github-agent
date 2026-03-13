@@ -22,6 +22,7 @@ vi.mock('../src/services/githubApi.js', () => ({
 
 vi.mock('../src/db/repositories/taskMappingRepository.js', () => ({
   insertTaskMapping: vi.fn().mockReturnValue({ id: 1 }),
+  findByRepoAndIssue: vi.fn().mockReturnValue(undefined),
 }));
 
 vi.mock('../src/db/sqlite.js', () => ({

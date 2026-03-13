@@ -2,7 +2,7 @@ import type { EnvConfig } from '../config/env.js';
 import type { IssuesEventPayload } from '../domain/types.js';
 import { ImplementerClient } from '../services/implementerApi.js';
 import { GitHubApiClient } from '../services/githubApi.js';
-import { insertTaskMapping } from '../db/repositories/taskMappingRepository.js';
+import { insertTaskMapping, findByRepoAndIssue } from '../db/repositories/taskMappingRepository.js';
 import { logger } from '../utils/logger.js';
 
 export async function handleIssuesEvent(
@@ -27,6 +27,17 @@ export async function handleIssuesEvent(
     return { processed: false, reason: 'assigned to different user' };
   }
 
+  // Idempotency: skip if we already have a mapping for this issue
+  const existing = findByRepoAndIssue(repoFullName, issue.number);
+  if (existing && existing.createdFromEvent === 'assigned_issue') {
+    logger.info('Issue already processed, skipping (idempotency)', {
+      repo: repoFullName,
+      issue: issue.number,
+      existingTaskId: existing.implementerTaskId,
+    });
+    return { processed: false, reason: 'already processed (duplicate webhook)' };
+  }
+
   logger.info('Processing issue assignment', { repo: repoFullName, issue: issue.number });
 
   const prompt = composeIssuePrompt(issue.title, issue.body);
@@ -35,7 +46,10 @@ export async function handleIssuesEvent(
   const github = new GitHubApiClient(config);
 
   try {
-    const result = await implementer.createTask(prompt);
+    const result = await implementer.createTask(prompt, {
+      repoUrl: repository.html_url + '.git',
+      githubToken: config.githubToken,
+    });
 
     logger.info('Implementer task created', {
       taskId: result.taskId,

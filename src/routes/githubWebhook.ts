@@ -36,7 +36,13 @@ export function registerWebhookRoute(app: FastifyInstance, config: EnvConfig): v
       return reply.status(400).send({ error: 'Missing X-GitHub-Event header' });
     }
 
-    const payload = JSON.parse(rawBody.toString('utf-8'));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let payload: any;
+    try {
+      payload = JSON.parse(rawBody.toString('utf-8'));
+    } catch {
+      return reply.status(400).send({ error: 'Invalid JSON body' });
+    }
 
     logger.info('Webhook received', { event, action: payload.action });
 

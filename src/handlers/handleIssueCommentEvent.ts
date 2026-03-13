@@ -29,6 +29,11 @@ export async function handleIssueCommentEvent(
   const isPr = !!issue.pull_request;
   const prompt = stripMention(comment.body, config.githubAgentUsername);
 
+  if (!prompt) {
+    logger.info('Empty prompt after stripping mention, ignoring', { repo: repoFullName, issue: issue.number });
+    return { processed: false, reason: 'empty prompt after stripping mention' };
+  }
+
   logger.info('Processing bot mention', {
     repo: repoFullName,
     issue: issue.number,
@@ -67,7 +72,10 @@ export async function handleIssueCommentEvent(
         issue: issue.number,
         isPr,
       });
-      result = await implementer.createTask(prompt);
+      result = await implementer.createTask(prompt, {
+        repoUrl: repository.html_url + '.git',
+        githubToken: config.githubToken,
+      });
     }
 
     logger.info('Implementer task created/continued', {
@@ -109,8 +117,8 @@ export async function handleIssueCommentEvent(
  * Check if comment body mentions the bot username.
  */
 export function mentionsBot(body: string, botUsername: string): boolean {
-  const mention = `@${botUsername}`;
-  return body.toLowerCase().includes(mention.toLowerCase());
+  const regex = new RegExp(`@${escapeRegex(botUsername)}(?:\\b|$)`, 'i');
+  return regex.test(body);
 }
 
 /**

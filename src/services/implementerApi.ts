@@ -27,6 +27,7 @@ export class ImplementerClient {
         Authorization: `Bearer ${this.apiKey}`,
       },
       body: body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(30_000),
     });
 
     if (!response.ok) {
